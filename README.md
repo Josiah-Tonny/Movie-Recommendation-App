@@ -1,2 +1,2 @@
 #MovieMate-Application
-#Savannah Informatics Assessment Project
+#Savannah Informatics Assessment Project# Movie-Mate
