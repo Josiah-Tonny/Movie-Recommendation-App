@@ -47,7 +47,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   signUp: async (email, password, name) => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch(`${API_BASE}/${isDevelopment ? 'register' : 'register'}`, {
+      const endpoint = isDevelopment 
+        ? `${API_BASE}/register`          // For localhost
+        : '/.netlify/functions/auth-register';  // For production
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, name }),
@@ -76,7 +80,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   signIn: async (email, password) => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch(`${API_BASE}/${isDevelopment ? 'login' : 'login'}`, {
+      const endpoint = isDevelopment 
+        ? `${API_BASE}/login`          // For localhost
+        : '/.netlify/functions/auth-login';  // For production
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
