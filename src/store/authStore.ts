@@ -1,7 +1,15 @@
 import { create } from 'zustand';
 
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  watchlist?: string[];
+  favorites?: string[];
+}
+
 interface AuthState {
-  user: any;
+  user: User | null;
   token: string | null;
   isAuthenticated: boolean;
   loading: boolean;
@@ -10,6 +18,13 @@ interface AuthState {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => void;
   checkAuthStatus: () => void;
+  checkAuthentication: () => Promise<void>; // Add this line
+  favorites: string[];  // Add this line
+  watchlist: string[];  // Add this line
+  addToFavorites: (movieId: string) => void;  // Add this line
+  removeFromFavorites: (movieId: string) => void;  // Add this line
+  addToWatchlist: (movieId: string) => void;  // Add this line
+  removeFromWatchlist: (movieId: string) => void;  // Add this line
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -18,6 +33,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: !!localStorage.getItem('token'),
   loading: false,
   error: null,
+  favorites: [], // Initialize empty array
+  watchlist: [], // Initialize empty array
 
   signUp: async (email, password, name) => {
     set({ loading: true, error: null });
@@ -43,7 +60,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
     } catch (error) {
       console.log(' Sign up failed:', error);
-      set({ loading: false, error: error.message });
+      set({ loading: false, error: (error as Error).message });
     }
   },
 
@@ -91,4 +108,39 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // For now, just set as authenticated if token exists
     set({ isAuthenticated: true });
   },
+
+  checkAuthentication: async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      set({ isAuthenticated: false, user: null, token: null });
+      return;
+    }
+    
+    // In a real implementation you would validate the token with your backend
+    set({ isAuthenticated: true });
+  },
+
+  addToFavorites: (movieId) => {
+    set((state) => ({
+      favorites: [...state.favorites, movieId]
+    }));
+  },
+  
+  removeFromFavorites: (movieId) => {
+    set((state) => ({
+      favorites: state.favorites.filter(id => id !== movieId)
+    }));
+  },
+  
+  addToWatchlist: (movieId) => {
+    set((state) => ({
+      watchlist: [...state.watchlist, movieId]
+    }));
+  },
+  
+  removeFromWatchlist: (movieId) => {
+    set((state) => ({
+      watchlist: state.watchlist.filter(id => id !== movieId)
+    }));
+  }
 }));
