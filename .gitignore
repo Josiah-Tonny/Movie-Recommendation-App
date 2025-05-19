@@ -1,0 +1,13 @@
+# Dependency directories
+node_modules
+.cache
+
+# Environment variables
+.env
+.env.*
+
+# Build output
+dist
+
+# Local Netlify folder
+.netlify
