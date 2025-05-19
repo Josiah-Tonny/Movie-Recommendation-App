@@ -1,14 +1,12 @@
-const { MongoClient, ObjectId } = require('mongodb');
+const { MongoClient } = require('mongodb');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Updated CORS headers to allow requests from localhost
+// Simple CORS headers that will definitely work
 const headers = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Max-Age': '2592000', // 30 days
-  'Access-Control-Allow-Credentials': 'true'
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
 exports.handler = async (event, context) => {
@@ -72,15 +70,16 @@ exports.handler = async (event, context) => {
           email: user.email,
           name: user.name,
           watchlist: user.watchlist || [],
-          favorites: user.favorites || []  // Add this line
+          favorites: user.favorites || []
         }
       })
     };
   } catch (error) {
+    console.error('Login error:', error);
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ message: 'Server error', error: error.message })
+      body: JSON.stringify({ message: 'Server error' })
     };
   }
 };

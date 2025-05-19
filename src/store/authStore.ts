@@ -30,6 +30,11 @@ interface AuthState {
 // Helper function to determine environment
 const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
+// API endpoint based on environment
+const API_BASE = isDevelopment
+  ? 'http://localhost:5000/api/auth'  // Your local server
+  : '/.netlify/functions/auth';  // Netlify functions in production
+
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: localStorage.getItem('token'),
@@ -42,31 +47,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   signUp: async (email, password, name) => {
     set({ loading: true, error: null });
     try {
-      if (isDevelopment) {
-        // In development, use a local mock to avoid CORS
-        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
-        const token = `dev-token-${Date.now()}`;
-        localStorage.setItem('token', token);
-        
-        set({
-          user: {
-            id: `dev-user-${Date.now()}`,
-            email,
-            name,
-            watchlist: [],
-            favorites: []
-          },
-          token,
-          isAuthenticated: true,
-          loading: false,
-          favorites: [],
-          watchlist: []
-        });
-        return;
-      }
-      
-      // In production, use the real API
-      const response = await fetch('/.netlify/functions/auth/register', {
+      const response = await fetch(`${API_BASE}/${isDevelopment ? 'register' : 'register'}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, name }),
@@ -88,7 +69,6 @@ export const useAuthStore = create<AuthState>((set) => ({
         watchlist: data.user.watchlist || []
       });
     } catch (error) {
-      // Don't log the full error - just the message
       set({ loading: false, error: (error as Error).message });
     }
   },
@@ -96,31 +76,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   signIn: async (email, password) => {
     set({ loading: true, error: null });
     try {
-      if (isDevelopment) {
-        // In development, use a local mock to avoid CORS
-        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
-        const token = `dev-token-${Date.now()}`;
-        localStorage.setItem('token', token);
-        
-        set({
-          user: {
-            id: `dev-user-${Date.now()}`,
-            email,
-            name: email.split('@')[0],
-            watchlist: [],
-            favorites: []
-          },
-          token,
-          isAuthenticated: true,
-          loading: false,
-          favorites: [],
-          watchlist: []
-        });
-        return;
-      }
-      
-      // In production, use the real API
-      const response = await fetch('/.netlify/functions/auth/login', {
+      const response = await fetch(`${API_BASE}/${isDevelopment ? 'login' : 'login'}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -142,7 +98,6 @@ export const useAuthStore = create<AuthState>((set) => ({
         watchlist: data.user.watchlist || []
       });
     } catch (error) {
-      // Don't log the full error - just the message
       set({ loading: false, error: (error as Error).message });
     }
   },

@@ -2,13 +2,11 @@ const { MongoClient } = require('mongodb');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Enhanced CORS headers for development and production
+// Simple CORS headers that will definitely work
 const headers = {
-  'Access-Control-Allow-Origin': '*',  // Allow requests from any origin
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Max-Age': '86400',  // 24 hours
-  'Access-Control-Allow-Credentials': 'true'
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
 exports.handler = async (event, context) => {
@@ -50,7 +48,7 @@ exports.handler = async (event, context) => {
       password: hashedPassword,
       name,
       watchlist: [],
-      favorites: []  // Add favorites array for consistency
+      favorites: []
     });
 
     // Create JWT token
@@ -71,15 +69,16 @@ exports.handler = async (event, context) => {
           email,
           name,
           watchlist: [],
-          favorites: []  // Add favorites to response
+          favorites: []
         }
       })
     };
   } catch (error) {
+    console.error('Register error:', error);
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ message: 'Server error', error: error.message })
+      body: JSON.stringify({ message: 'Server error' })
     };
   }
 };
