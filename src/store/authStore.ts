@@ -18,27 +18,62 @@ interface AuthState {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => void;
   checkAuthStatus: () => void;
-  checkAuthentication: () => Promise<void>; // Add this line
-  favorites: string[];  // Add this line
-  watchlist: string[];  // Add this line
-  addToFavorites: (movieId: string) => void;  // Add this line
-  removeFromFavorites: (movieId: string) => void;  // Add this line
-  addToWatchlist: (movieId: string) => void;  // Add this line
-  removeFromWatchlist: (movieId: string) => void;  // Add this line
+  checkAuthentication: () => Promise<void>;
+  favorites: string[];
+  watchlist: string[];
+  addToFavorites: (movieId: string) => void;
+  removeFromFavorites: (movieId: string) => void;
+  addToWatchlist: (movieId: string) => void;
+  removeFromWatchlist: (movieId: string) => void;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
+// Helper function to determine if we're in development
+const isDevelopment = () => {
+  return window.location.hostname === 'localhost' || 
+         window.location.hostname === '127.0.0.1';
+};
+
+// Mock user for development environment
+const MOCK_USER: User = {
+  id: 'mock-user-123',
+  email: 'demo@example.com',
+  name: 'Demo User',
+  watchlist: [],
+  favorites: []
+};
+
+export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: localStorage.getItem('token'),
   isAuthenticated: !!localStorage.getItem('token'),
   loading: false,
   error: null,
-  favorites: [], // Initialize empty array
-  watchlist: [], // Initialize empty array
+  favorites: [],
+  watchlist: [],
 
   signUp: async (email, password, name) => {
     set({ loading: true, error: null });
     try {
+      if (isDevelopment()) {
+        // For development environment: mock signup
+        console.log('Development mode: Using mock signup');
+        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API delay
+        
+        const token = 'mock-token-' + Math.random().toString(36).substring(2);
+        localStorage.setItem('token', token);
+        
+        set({
+          user: { ...MOCK_USER, email, name },
+          token,
+          isAuthenticated: true,
+          loading: false,
+          favorites: [],
+          watchlist: []
+        });
+        return;
+      }
+      
+      // For production environment: use Netlify Functions
       const response = await fetch('/.netlify/functions/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -57,9 +92,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         token: data.token,
         isAuthenticated: true,
         loading: false,
+        favorites: data.user.favorites || [],
+        watchlist: data.user.watchlist || []
       });
     } catch (error) {
-      console.log(' Sign up failed:', error);
+      console.log('Sign up failed:', error);
       set({ loading: false, error: (error as Error).message });
     }
   },
@@ -67,6 +104,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signIn: async (email, password) => {
     set({ loading: true, error: null });
     try {
+      if (isDevelopment()) {
+        // For development environment: mock login
+        console.log('Development mode: Using mock login');
+        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API delay
+        
+        // Simple validation (you can adjust this as needed)
+        if (email !== 'demo@example.com') {
+          throw new Error('Invalid credentials');
+        }
+        
+        const token = 'mock-token-' + Math.random().toString(36).substring(2);
+        localStorage.setItem('token', token);
+        
+        set({
+          user: { ...MOCK_USER, email },
+          token,
+          isAuthenticated: true,
+          loading: false,
+          favorites: [],
+          watchlist: []
+        });
+        return;
+      }
+      
+      // For production: use Netlify Functions
       const response = await fetch('/.netlify/functions/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -85,16 +147,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         token: data.token,
         isAuthenticated: true,
         loading: false,
+        favorites: data.user.favorites || [],
+        watchlist: data.user.watchlist || []
       });
     } catch (error) {
-      console.log(' Sign in failed:', error);
-      set({ loading: false, error: error.message });
+      console.log('Sign in failed:', error);
+      set({ loading: false, error: (error as Error).message });
     }
   },
 
   signOut: () => {
     localStorage.removeItem('token');
-    set({ user: null, token: null, isAuthenticated: false });
+    set({ 
+      user: null, 
+      token: null, 
+      isAuthenticated: false,
+      favorites: [],
+      watchlist: [] 
+    });
   },
 
   checkAuthStatus: () => {
@@ -104,9 +174,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return;
     }
     
-    // Here you could add JWT token verification
-    // For now, just set as authenticated if token exists
-    set({ isAuthenticated: true });
+    // For simplicity, assume token is valid
+    if (isDevelopment()) {
+      set({ 
+        isAuthenticated: true,
+        user: MOCK_USER
+      });
+    } else {
+      set({ isAuthenticated: true });
+    }
   },
 
   checkAuthentication: async () => {
@@ -116,8 +192,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return;
     }
     
-    // In a real implementation you would validate the token with your backend
-    set({ isAuthenticated: true });
+    if (isDevelopment()) {
+      // In development, use mock user
+      set({ 
+        isAuthenticated: true,
+        user: MOCK_USER
+      });
+    } else {
+      // In production, you would validate the token with your backend
+      // For now, just set as authenticated if token exists
+      set({ isAuthenticated: true });
+    }
   },
 
   addToFavorites: (movieId) => {
