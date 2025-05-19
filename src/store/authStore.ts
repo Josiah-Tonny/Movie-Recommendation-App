@@ -27,20 +27,8 @@ interface AuthState {
   removeFromWatchlist: (movieId: string) => void;
 }
 
-// Helper function to determine if we're in development
-const isDevelopment = () => {
-  return window.location.hostname === 'localhost' || 
-         window.location.hostname === '127.0.0.1';
-};
-
-// Mock user for development environment
-const MOCK_USER: User = {
-  id: 'mock-user-123',
-  email: 'demo@example.com',
-  name: 'Demo User',
-  watchlist: [],
-  favorites: []
-};
+// Helper function to determine environment
+const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
@@ -54,16 +42,20 @@ export const useAuthStore = create<AuthState>((set) => ({
   signUp: async (email, password, name) => {
     set({ loading: true, error: null });
     try {
-      if (isDevelopment()) {
-        // For development environment: mock signup
-        console.log('Development mode: Using mock signup');
-        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API delay
-        
-        const token = 'mock-token-' + Math.random().toString(36).substring(2);
+      if (isDevelopment) {
+        // In development, use a local mock to avoid CORS
+        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
+        const token = `dev-token-${Date.now()}`;
         localStorage.setItem('token', token);
         
         set({
-          user: { ...MOCK_USER, email, name },
+          user: {
+            id: `dev-user-${Date.now()}`,
+            email,
+            name,
+            watchlist: [],
+            favorites: []
+          },
           token,
           isAuthenticated: true,
           loading: false,
@@ -73,7 +65,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         return;
       }
       
-      // For production environment: use Netlify Functions
+      // In production, use the real API
       const response = await fetch('/.netlify/functions/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -96,7 +88,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         watchlist: data.user.watchlist || []
       });
     } catch (error) {
-      console.log('Sign up failed:', error);
+      // Don't log the full error - just the message
       set({ loading: false, error: (error as Error).message });
     }
   },
@@ -104,21 +96,20 @@ export const useAuthStore = create<AuthState>((set) => ({
   signIn: async (email, password) => {
     set({ loading: true, error: null });
     try {
-      if (isDevelopment()) {
-        // For development environment: mock login
-        console.log('Development mode: Using mock login');
-        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API delay
-        
-        // Simple validation (you can adjust this as needed)
-        if (email !== 'demo@example.com') {
-          throw new Error('Invalid credentials');
-        }
-        
-        const token = 'mock-token-' + Math.random().toString(36).substring(2);
+      if (isDevelopment) {
+        // In development, use a local mock to avoid CORS
+        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
+        const token = `dev-token-${Date.now()}`;
         localStorage.setItem('token', token);
         
         set({
-          user: { ...MOCK_USER, email },
+          user: {
+            id: `dev-user-${Date.now()}`,
+            email,
+            name: email.split('@')[0],
+            watchlist: [],
+            favorites: []
+          },
           token,
           isAuthenticated: true,
           loading: false,
@@ -128,7 +119,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         return;
       }
       
-      // For production: use Netlify Functions
+      // In production, use the real API
       const response = await fetch('/.netlify/functions/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -151,7 +142,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         watchlist: data.user.watchlist || []
       });
     } catch (error) {
-      console.log('Sign in failed:', error);
+      // Don't log the full error - just the message
       set({ loading: false, error: (error as Error).message });
     }
   },
@@ -174,15 +165,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       return;
     }
     
-    // For simplicity, assume token is valid
-    if (isDevelopment()) {
-      set({ 
-        isAuthenticated: true,
-        user: MOCK_USER
-      });
-    } else {
-      set({ isAuthenticated: true });
-    }
+    set({ isAuthenticated: true });
   },
 
   checkAuthentication: async () => {
@@ -192,17 +175,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       return;
     }
     
-    if (isDevelopment()) {
-      // In development, use mock user
-      set({ 
-        isAuthenticated: true,
-        user: MOCK_USER
-      });
-    } else {
-      // In production, you would validate the token with your backend
-      // For now, just set as authenticated if token exists
-      set({ isAuthenticated: true });
-    }
+    set({ isAuthenticated: true });
   },
 
   addToFavorites: (movieId) => {

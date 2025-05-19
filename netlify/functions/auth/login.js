@@ -2,11 +2,13 @@ const { MongoClient, ObjectId } = require('mongodb');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Configure CORS headers
+// Updated CORS headers to allow requests from localhost
 const headers = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS'
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '2592000', // 30 days
+  'Access-Control-Allow-Credentials': 'true'
 };
 
 exports.handler = async (event, context) => {
@@ -69,7 +71,8 @@ exports.handler = async (event, context) => {
           id: user._id.toString(),
           email: user.email,
           name: user.name,
-          watchlist: user.watchlist || []
+          watchlist: user.watchlist || [],
+          favorites: user.favorites || []  // Add this line
         }
       })
     };
