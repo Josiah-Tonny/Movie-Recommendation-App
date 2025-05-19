@@ -35,9 +35,6 @@ const Auth: React.FC = () => {
   // Navigation hook for redirecting after authentication
   const navigate = useNavigate();
 
-  // Add a state for success message
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
   // Fetch popular movie backdrops for the background
   useEffect(() => {
     const fetchBackdrops = async () => {
@@ -77,16 +74,12 @@ const Auth: React.FC = () => {
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('Auth state before submit:', { isAuthenticated, loading, error });
-    
     try {
       // Call the appropriate auth function based on current mode
       if (isLogin) {
         await signIn(userEmail, userPassword);
-        setSuccessMessage('Login successful! Redirecting...');
       } else {
         await signUp(userEmail, userPassword, userName);
-        setSuccessMessage('Account created successfully! Redirecting...');
       }
       
       // Save to localStorage if rememberMe is checked
@@ -96,22 +89,12 @@ const Auth: React.FC = () => {
         localStorage.removeItem('rememberedEmail');
       }
       
-      // Add a short delay before navigation for better UX
-      setTimeout(() => {
-        console.log('Navigating to home page after authentication');
-        navigate('/');
-      }, 1000);
+      // Navigate directly without delay or success message
+      navigate('/');
       
-    } catch (authError: unknown) {
-      console.error('Authentication error:', authError);
+    } catch (error) {
+      console.error('Authentication error:', error);
     }
-    
-    // Get updated auth state from the store
-    const currentAuthState = useAuthStore.getState();
-    console.log('Auth state after submit:', { 
-      user: !!currentAuthState.user, 
-      isAuthenticated: currentAuthState.isAuthenticated 
-    });
   };
 
   // Toggle between login and signup modes
@@ -311,20 +294,6 @@ const Auth: React.FC = () => {
                       </svg>
                     </div>
                     <p>{error}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Display success message if authentication is successful */}
-              {successMessage && (
-                <div className="px-4 py-3 rounded-md bg-green-500 bg-opacity-20 border border-green-400 text-green-200 text-sm">
-                  <div className="flex items-start space-x-2">
-                    <div className="flex-shrink-0 pt-0.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <p>{successMessage}</p>
                   </div>
                 </div>
               )}

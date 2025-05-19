@@ -28,12 +28,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     checkAuth();
   }, [isAuthenticated, checkAuthentication]);
 
-  // Add console logs to see authentication state changes
-  useEffect(() => {
-    console.log('ProtectedRoute auth status:', 
-      { user: !!user, isAuthenticated, token: !!localStorage.getItem('token') });
-  }, [user, isAuthenticated]);
-
   // Show loading state while checking authentication
   if (loading || !checkComplete) {
     return (
