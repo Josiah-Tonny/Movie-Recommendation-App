@@ -32,7 +32,7 @@
     "movie-recommendation-app": "file:",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.22.1",
+    "react-router-dom": "^6.30.3",
     "react-slick": "^0.30.3",
     "slick-carousel": "^1.8.1",
     "tailwind-merge": "^3.1.0",
